@@ -1,116 +1,105 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: yabaadi <yabaadi@student.1337.ma>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/11/18 17:01:45 by yabaadi           #+#    #+#             */
+/*   Updated: 2026/11/22 09:43:06 by yabaadi          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "get_next_line.h"
 
-static int    get_line(char *buffer, int fd, char **rest)
+static char	*free_rest(char **rest)
 {
-
-    ssize_t         bytes;
-    ssize_t         i;
-
-    while(1)
-    {
-        bytes = read(fd, buffer, BUFFER_SIZE);
-        // -1  -> read error
-        if (bytes < 0)
-        {
-            free(*rest);
-            *rest = NULL;
-            return (-1);
-        }
-        // 0   -> EOF
-        if (bytes == 0)
-            return (0);
-        buffer[bytes] = '\0';
-        // kanfreey rest dakhl strjoin
-        *rest = ft_strjoin(*rest, buffer);
-        if (!*rest)
-            return (-1);
-        i = 0;
-        while ((*rest)[i])
-        {
-            // 1   -> newline found
-            if ((*rest)[i] == '\n')
-                return (1);
-            i++;
-        }
-    }
+	free(*rest);
+	*rest = NULL;
+	return (NULL);
 }
 
-static char *extract_line(char *rest)
+static int	get_line(char *buffer, int fd, char **rest)
 {
-    int i;
+	ssize_t	bytes;
+	ssize_t	i;
 
-    i = 0;
-    while (rest[i])
-    {
-        if (rest[i] == '\n')
-            return (ft_substr(rest, 0, i + 1));
-        i++;
-    }
-    return (ft_strdup(rest));
+	while (1)
+	{
+		bytes = read(fd, buffer, BUFFER_SIZE);
+		if (bytes < 0)
+			return (-1);
+		if (bytes == 0)
+			return (0);
+		buffer[bytes] = '\0';
+		*rest = ft_strjoin(*rest, buffer);
+		if (!*rest)
+			return (-1);
+		i = 0;
+		while ((*rest)[i])
+		{
+			if ((*rest)[i] == '\n')
+				return (1);
+			i++;
+		}
+	}
 }
 
-static char *update_rest(char *rest)
+static char	*extract_line(char *rest)
 {
-    int end;
-    int start;
-    char *tmp;
+	int	i;
 
-    start = 0;
-    while (rest[start] && rest[start] != '\n')
-        start++;
-    // mal9atx \n (7it mchat ta lakhir, \0 howa li khrjna)
-    if (!rest[start])
-    {
-        free(rest);
-        return (NULL);
-    }
-    // l9at \n w zdna 9dam
-    start++;
-    tmp = ft_substr(rest, start, ft_strlen(rest + start));
-    if (!tmp)
-    {
-        free(rest);
-        return (NULL);
-    }
-    free(rest);
-    return (tmp);
+	i = 0;
+	while (rest[i])
+	{
+		if (rest[i] == '\n')
+			return (ft_substr(rest, 0, i + 1));
+		i++;
+	}
+	return (ft_strdup(rest));
 }
 
-// 3wd liha b linked list
-char *get_next_line(int fd)
+static char	*update_rest(char *rest)
 {
-    char    *buffer;
-    static char    *rest;
-    char    *line;
+	int		start;
+	char	*tmp;
 
-    // if this condition kafi?
-    if (fd < 0 || BUFFER_SIZE <= 0)
-    return (NULL);
+	start = 0;
+	while (rest[start] && rest[start] != '\n')
+		start++;
+	if (!rest[start] || (rest[start] && !rest[start + 1]))
+		return (free_rest(&rest));
+	start++;
+	tmp = ft_substr(rest, start, ft_strlen(rest + start));
+	if (!tmp)
+		return (free_rest(&rest));
+	free(rest);
+	return (tmp);
+}
 
-    // IMP: matnsach tfree buffer at the end fhad function
-    buffer = malloc((size_t)(BUFFER_SIZE + 1));
-    if (!buffer)
-        return (NULL);
+char	*get_next_line(int fd)
+{
+	char		*buffer;
+	static char	*rest;
+	char		*line;
 
-    // if get_line return 0 ima tprinti null hit
-    // file khawi or print dakchi li b9a flast line
-    if (get_line(buffer, fd, &rest) < 0)
-    {
-        free(buffer);
-        // free(rest);
-        return (NULL);
-    }
-    // mybe khasni n3zal check dyal !*rest bach ila mab9a ta content nfreeyiha
-    // but rani kan3awd nfreeha wst update_rest f (ft_substr)
-    if (!rest)
-    {
-        free(buffer);
-        return (NULL);
-    }
-    line = extract_line(rest);
-    // momkin update.. trja3 null ghatwli rest = null
-    // hna f akhir line kanfree rest but rah mazal copy dyalo f line
-    rest = update_rest(rest);
-    free(buffer);
-    return (line);
+	if (fd < 0 || BUFFER_SIZE <= 0)
+		return (NULL);
+	buffer = malloc((size_t)BUFFER_SIZE + 1);
+	if (!buffer)
+		return (NULL);
+	if (get_line(buffer, fd, &rest) < 0 || !rest)
+	{
+		free(buffer);
+		return (free_rest(&rest));
+	}
+	line = extract_line(rest);
+	if (!line)
+	{
+		free(buffer);
+		return (free_rest(&rest));
+	}
+	rest = update_rest(rest);
+	free(buffer);
+	return (line);
 }
