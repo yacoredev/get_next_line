@@ -6,7 +6,7 @@
 /*   By: yabaadi <yabaadi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/18 17:02:08 by yabaadi           #+#    #+#             */
-/*   Updated: 2026/11/18 17:46:23 by yabaadi          ###   ########.fr       */
+/*   Updated: 2026/11/23 16:01:40 by yabaadi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,7 @@
 #  define BUFFER_SIZE 42
 # endif
 
-# ifndef OPEN_MAX
-#  define OPEN_MAX 1024
-# endif
+# define OPEN_MAX 1024
 
 char	*get_next_line(int fd);
 char	*ft_strjoin(char *s1, char const *s2);
